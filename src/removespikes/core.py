@@ -1,4 +1,5 @@
 import geopandas as gpd
+import numpy as np
 from shapely.geometry import LineString, Polygon
 
 GeometryType = LineString | Polygon
@@ -9,7 +10,39 @@ class RemoveSpikes:
     @staticmethod
     def _calculate_angle(a: Coord, b: Coord, c: Coord) -> float:
         """Calculate the angle between three points (in degrees)."""
-        pass
+
+        # Convert points to numpy arrays
+        A = np.array(a)
+        B = np.array(b)
+        C = np.array(c)
+
+        # Create vectors BA and BC
+        BA = A - B
+        BC = C - B
+
+        # Calculate the dot product and magnitudes of BA and BC
+        dot_product = np.dot(BA, BC)
+        magnitude_BA = np.linalg.norm(BA)
+        magnitude_BC = np.linalg.norm(BC)
+
+        # Raise error if the magnitudes product is zero
+        mag_product = magnitude_BA * magnitude_BC
+        if mag_product == 0:
+            raise ZeroDivisionError()
+
+        # Calculate the cosine of the angle
+        cos_angle = dot_product / (magnitude_BA * magnitude_BC)
+
+        # Clip cos_angle to avoid numerical issues outside the range [-1, 1]
+        cos_angle = np.clip(cos_angle, -1.0, 1.0)
+
+        # Calculate the angle in radians
+        angle_rad = np.arccos(cos_angle)
+
+        # Convert the angle to degrees
+        angle_deg = np.degrees(angle_rad)
+
+        return float(angle_deg)
 
     @staticmethod
     def _remove_spikes_from_geometry(
