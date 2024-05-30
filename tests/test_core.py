@@ -1,5 +1,6 @@
 from math import isclose
 
+import geopandas as gpd
 import pytest
 from shapely.geometry import LineString, Polygon
 
@@ -208,6 +209,65 @@ class TestRemoveSpikesFromGeometry:
         assert result.equals(
             expected
         ), "Expected polygon to have only spikes with min distance removed"
+
+
+class TestRemoveSpikesFromGeoDataFrame:
+    @pytest.fixture
+    def simple_gdf(self) -> gpd.GeoDataFrame:
+        data = {
+            "geometry": [
+                LineString([(0, 0), (1, 1), (2, 2), (3, 1), (4, 0)]),
+                Polygon([(0, 0), (1, 1), (2, 2), (1, 0), (0, 0)]),
+            ]
+        }
+        return gpd.GeoDataFrame(data)
+
+    @pytest.fixture
+    def gdf_with_custom_column(self) -> gpd.GeoDataFrame:
+        data = {
+            "custom_geom": [
+                LineString([(0, 0), (1, 1), (2, 2), (3, 1), (4, 0)]),
+                Polygon([(0, 0), (1, 1), (2, 2), (1, 0), (0, 0)]),
+            ]
+        }
+        return gpd.GeoDataFrame(data)
+
+    @pytest.fixture
+    def empty_gdf(self) -> gpd.GeoDataFrame:
+        return gpd.GeoDataFrame(columns=["geometry"])
+
+    def test_basic_functionality(self, simple_gdf):
+        result_gdf = RemoveSpikes.from_geodataframe(simple_gdf)
+        assert not result_gdf.empty
+        assert len(result_gdf) == len(simple_gdf)
+
+    def test_return_new_geodataframe(self, simple_gdf):
+        result_gdf = RemoveSpikes.from_geodataframe(simple_gdf)
+        assert not result_gdf.empty
+        assert result_gdf is not simple_gdf
+
+    def test_custom_geometry_column(self, gdf_with_custom_column):
+        result_gdf = RemoveSpikes.from_geodataframe(
+            gdf_with_custom_column, geometry_column="custom_geom"
+        )
+        assert not result_gdf.empty
+        assert len(result_gdf) == len(gdf_with_custom_column)
+
+    def test_empty_geodataframe(self, empty_gdf):
+        result_gdf = RemoveSpikes.from_geodataframe(empty_gdf)
+        assert result_gdf.empty
+
+    def test_angle_threshold(self, simple_gdf):
+        result_gdf = RemoveSpikes.from_geodataframe(simple_gdf, angle=10)
+        assert not result_gdf.empty
+        assert len(result_gdf) == len(simple_gdf)
+
+    def test_min_distance(self, simple_gdf):
+        result_gdf = RemoveSpikes.from_geodataframe(
+            simple_gdf, min_distance=0.5
+        )
+        assert not result_gdf.empty
+        assert len(result_gdf) == len(simple_gdf)
 
 
 if __name__ == "__main__":

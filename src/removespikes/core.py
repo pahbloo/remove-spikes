@@ -194,4 +194,11 @@ class RemoveSpikes:
         Returns:
             A new GeoDataFrame with the modified geometries.
         """
-        pass
+        gdf = gdf.copy()  # type: ignore
+        geometry_column = geometry_column or gdf.geometry.name
+        gdf[geometry_column] = gdf[geometry_column].apply(
+            lambda geom: RemoveSpikes._remove_spikes_from_geometry(
+                geom, angle, min_distance
+            )
+        )
+        return gdf
