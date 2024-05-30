@@ -63,3 +63,21 @@ To see all available options and get help with usage, simply run:
 ```sh
 remove-spikes --help
 ```
+
+## How does it work? (Flowchart)
+
+```mermaid
+graph TD
+  A[Input GeoDataFrame/File] --> B[RemoveSpikes]
+  B --> E[For each Geometry:]
+  E --> G[For each Vertex:]
+  G --> C{Angle Check}
+  C -- Yes --> D{Distance Check}
+  C -- No --> H[Keep Vertex]
+  D -- Yes --> F[Remove Vertex]
+  D -- No --> H
+  F --> I[Updated Geometry]
+  H --> I
+  I --> J[Updated GeoDataFrame]
+  J --> K[Output GeoDataFrame/File]
+```
