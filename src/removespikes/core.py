@@ -46,9 +46,9 @@ class RemoveSpikes:
 
     @staticmethod
     def _is_spike(
-        prev_pt: Coord,
-        curr_pt: Coord,
-        next_pt: Coord,
+        a: Coord,
+        b: Coord,
+        c: Coord,
         angle_threshold: float,
         min_distance: float,
     ) -> bool:
@@ -56,22 +56,16 @@ class RemoveSpikes:
         Check if a point is a spike based on angle and distance thresholds.
         """
         try:
-            angle: float = RemoveSpikes._calculate_angle(
-                prev_pt, curr_pt, next_pt
-            )
+            angle: float = RemoveSpikes._calculate_angle(a, b, c)
         except ZeroDivisionError:
             # Don't consider as spike if angle calculation fails
             return False
 
-        a: float = (
-            (prev_pt[0] - curr_pt[0]) ** 2 + (prev_pt[1] - curr_pt[1]) ** 2
-        ) ** 0.5
-        b: float = (
-            (curr_pt[0] - next_pt[0]) ** 2 + (curr_pt[1] - next_pt[1]) ** 2
-        ) ** 0.5
+        d1: float = ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+        d2: float = ((b[0] - c[0]) ** 2 + (b[1] - c[1]) ** 2) ** 0.5
 
         return (
-            angle < angle_threshold and a > min_distance and b > min_distance
+            angle < angle_threshold and d1 > min_distance and d2 > min_distance
         )
 
     @staticmethod
