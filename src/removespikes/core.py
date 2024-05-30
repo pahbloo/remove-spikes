@@ -170,7 +170,10 @@ class RemoveSpikes:
         Returns:
             A GeoDataFrame with the modified geometries.
         """
-        pass
+        gdf: gpd.GeoDataFrame = gpd.read_file(filename, **kwargs)
+        return RemoveSpikes.from_geodataframe(
+            gdf, geometry_column, angle, min_distance
+        )
 
     @staticmethod
     def from_geodataframe(

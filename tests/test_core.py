@@ -1,5 +1,8 @@
 from math import isclose
+from tempfile import TemporaryDirectory
 
+import fiona
+import fiona.errors
 import geopandas as gpd
 import pytest
 from shapely.geometry import LineString, Polygon
@@ -268,6 +271,68 @@ class TestRemoveSpikesFromGeoDataFrame:
         )
         assert not result_gdf.empty
         assert len(result_gdf) == len(simple_gdf)
+
+
+class TestRemoveSpikesFromFile:
+    @pytest.fixture
+    def sample_gdf(self):
+        # Create a sample GeoDataFrame with LineString and Polygon
+        data = {
+            "geometry": [
+                LineString([(0, 0), (1, 2), (2, 1), (3, 3)]),
+                Polygon([(0, 0), (1, 2), (2, 1), (0, 0)]),
+            ]
+        }
+        return gpd.GeoDataFrame(data)
+
+    @pytest.fixture
+    def temp_file(self, sample_gdf):
+        with TemporaryDirectory() as tmpdirname:
+            temp_file = f"{tmpdirname}/temp_file.geojson"
+            sample_gdf.to_file(temp_file)
+            yield temp_file
+
+    def test_from_file_removes_spikes(self, temp_file):
+        result = RemoveSpikes.from_file(temp_file, angle=1.0, min_distance=0.0)
+
+        assert isinstance(result, gpd.GeoDataFrame)
+        assert len(result) == 2
+
+        line_geom = result.iloc[0].geometry
+        poly_geom = result.iloc[1].geometry
+
+        assert isinstance(line_geom, LineString)
+        assert isinstance(poly_geom, Polygon)
+
+    def test_from_file_default_geometry_column(self, temp_file):
+        result = RemoveSpikes.from_file(temp_file, angle=1.0, min_distance=0.0)
+
+        assert isinstance(result, gpd.GeoDataFrame)
+        assert len(result) == 2
+
+    def test_from_file_custom_geometry_column(self, temp_file):
+        result = RemoveSpikes.from_file(
+            temp_file, geometry_column="geometry", angle=1.0, min_distance=0.0
+        )
+
+        assert isinstance(result, gpd.GeoDataFrame)
+        assert len(result) == 2
+
+    def test_from_file_invalid_file(self):
+        with pytest.raises(fiona.errors.DriverError):
+            RemoveSpikes.from_file("invalid_file.gpkg")
+
+    def test_from_file_empty_gdf(self, temp_file):
+        empty_gdf = gpd.GeoDataFrame({"geometry": []})
+        with TemporaryDirectory() as tmpdirname:
+            temp_file = f"{tmpdirname}/temp_file.geojson"
+            empty_gdf.to_file(temp_file)
+            result = RemoveSpikes.from_file(
+                temp_file, angle=1.0, min_distance=0.0
+            )
+
+        assert isinstance(result, gpd.GeoDataFrame)
+        assert result.empty
 
 
 if __name__ == "__main__":
