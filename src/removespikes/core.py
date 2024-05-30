@@ -45,6 +45,36 @@ class RemoveSpikes:
         return float(angle_deg)
 
     @staticmethod
+    def _is_spike(
+        prev_pt: Coord,
+        curr_pt: Coord,
+        next_pt: Coord,
+        angle_threshold: float,
+        min_distance: float,
+    ) -> bool:
+        """
+        Check if a point is a spike based on angle and distance thresholds.
+        """
+        try:
+            angle: float = RemoveSpikes._calculate_angle(
+                prev_pt, curr_pt, next_pt
+            )
+        except ZeroDivisionError:
+            # Don't consider as spike if angle calculation fails
+            return False
+
+        a: float = (
+            (prev_pt[0] - curr_pt[0]) ** 2 + (prev_pt[1] - curr_pt[1]) ** 2
+        ) ** 0.5
+        b: float = (
+            (curr_pt[0] - next_pt[0]) ** 2 + (curr_pt[1] - next_pt[1]) ** 2
+        ) ** 0.5
+
+        return (
+            angle < angle_threshold and a > min_distance and b > min_distance
+        )
+
+    @staticmethod
     def _remove_spikes_from_geometry(
         geometry: GeometryType,
         angle_threshold: float = 1.0,
@@ -63,7 +93,57 @@ class RemoveSpikes:
         Returns:
             The geometry with spikes removed.
         """
-        pass
+        if geometry.is_empty:
+            return geometry
+
+        def is_line() -> bool:
+            return isinstance(geometry, LineString)
+
+        def is_polygon() -> bool:
+            return isinstance(geometry, Polygon)
+
+        if not is_line() and not is_polygon:
+            return geometry
+
+        coords = (
+            list(geometry.coords)
+            if is_line()
+            else list(geometry.exterior.coords)
+        )
+        new_coords: list[Coord] = [coords[0]]
+
+        if isinstance(geometry, Polygon):
+            # Handle the case where the first point is a spike in a Polygon
+            if RemoveSpikes._is_spike(
+                coords[-2], coords[0], coords[1], angle_threshold, min_distance
+            ):
+                # Start from the second point
+                new_coords = []
+
+        for i in range(1, len(coords) - 1):
+            prev_pt = coords[i - 1]
+            curr_pt = coords[i]
+            next_pt = coords[i + 1]
+
+            if not RemoveSpikes._is_spike(
+                prev_pt, curr_pt, next_pt, angle_threshold, min_distance
+            ):
+                new_coords.append(curr_pt)
+
+        # Don't add the last point to the new polygon. The first and last
+        # coordinates of a polygon are the same. If we remove the first point,
+        # we can't add it back as the last one. The simplest solution is to not
+        # append it, since creating a Polygon(a, b, c) is the same as creating
+        # a Polygon(a, b, c, a).
+        if is_line():
+            new_coords.append(coords[-1])
+
+        if isinstance(geometry, LineString):
+            return LineString(new_coords)
+        elif isinstance(geometry, Polygon):
+            return Polygon(new_coords)
+        else:
+            return geometry
 
     @staticmethod
     def from_file(
