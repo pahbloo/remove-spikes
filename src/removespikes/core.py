@@ -31,7 +31,7 @@ class RemoveSpikes:
             raise ZeroDivisionError()
 
         # Calculate the cosine of the angle
-        cos_angle = dot_product / (magnitude_BA * magnitude_BC)
+        cos_angle = dot_product / mag_product
 
         # Clip cos_angle to avoid numerical issues outside the range [-1, 1]
         cos_angle = np.clip(cos_angle, -1.0, 1.0)
