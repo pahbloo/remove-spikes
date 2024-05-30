@@ -7,8 +7,8 @@ This can greatly improve the quality of your spatial data for further analysis a
 ## Table of contents
 
 - [Instalation from Source](#instalation-from-source)
-- [Python Usage](#python-usage)
-- [CLI Usage](#cli-usage)
+- [Basic Python Usage](#basic-python-usage)
+- [Basic CLI Usage](#basic-cli-usage)
 - [How does it work? (Flowchart)](#how-does-it-work-flowchart)
 
 ## Instalation from Source
@@ -49,7 +49,10 @@ gpd = RemoveSpikes.from_file("data.gpkg", angle=1)
 new_gpd = RemoveSpikes.from_geodataframe(spiky_gpd, angle=1)
 ```
 
-For a comprehensive list of options and more detailed usage instructions, please refer to the [full documentation]().
+For a comprehensive list of options and more detailed usage instructions, please refer to [`from_file`][1] and [`from_geodataframe`][2] docstrings.
+
+[1]: https://github.com/pahbloo/remove-spikes/blob/main/src/removespikes/core.py#L143
+[2]: https://github.com/pahbloo/remove-spikes/blob/main/src/removespikes/core.py#L173
 
 ## Basic CLI Usage
 
