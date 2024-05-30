@@ -9,6 +9,7 @@ This can greatly improve the quality of your spatial data for further analysis a
 - [Instalation from Source](#instalation-from-source)
 - [Python Usage](#python-usage)
 - [CLI Usage](#cli-usage)
+- [How does it work? (Flowchart)](#how-does-it-work-flowchart)
 
 ## Instalation from Source
 
